@@ -1,0 +1,71 @@
+version: '2'
+
+services:
+  rabbitmq:
+    image: docker.io/bitnami/rabbitmq:3.10
+    container_name: msg_broker
+    ports:
+      - '4369:4369'
+      - '5551:5551'
+      - '5552:5552'
+      - '5672:5672'
+      - '25672:25672'
+      - '15672:15672'
+    environment:
+      - RABBITMQ_SECURE_PASSWORD=yes
+      - RABBITMQ_LOGS=-
+    volumes:
+      - './rabbitmq_data:/bitnami/rabbitmq/mnesia'
+
+  mariadb:
+    image: docker.io/bitnami/mariadb:11.0
+    container_name: db_storage
+    environment:
+      # ALLOW_EMPTY_PASSWORD is recommended only for development.
+      - ALLOW_EMPTY_PASSWORD=yes
+      - MARIADB_USER=bn_users_ms
+      - MARIADB_DATABASE=users_ms
+
+  users_ms:
+    image: docker.io/bitnami/laravel:10
+    container_name: users_ms
+    ports:
+      - '8000:8000'
+    environment:
+      - LARAVEL_PORT_NUMBER=8000
+      - QUEUE_CONNECTION=rabbitmq
+      - DB_HOST=mariadb
+      - DB_PORT=3306
+      - DB_USERNAME=bn_users_ms
+      - DB_DATABASE=users_ms
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_USER=rabbitmq
+      - RABBITMQ_PASSWORD=rabbitmq_pass
+    volumes:
+      - './users_ms/src:/app'
+    depends_on:
+      - mariadb
+      - rabbitmq
+
+  notifications_ms:
+    image: docker.io/bitnami/laravel:10
+    container_name: notifications_ms
+    ports:
+      - '3000:3000'
+    environment:
+      - LARAVEL_PORT_NUMBER=3000
+      - QUEUE_CONNECTION=rabbitmq
+      - DB_CONNECTION=sqlite
+      - DB_DATABASE=database/database.sqlite
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_USER=rabbitmq_nt
+      - RABBITMQ_PASSWORD=rabbitmq_pass
+    volumes:
+      - './notifications_ms/src:/app'
+    depends_on:
+      - rabbitmq
+    command: php artisan queue:work
+
+volumes:
+  rabbitmq_data:
+    driver: local

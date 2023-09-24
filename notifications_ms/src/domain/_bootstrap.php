@@ -8,6 +8,12 @@ use DataDrivers\NotificationDataDriver;
 use Domain\Interfaces\NotificationInterface;
 use Domain\Interfaces\NotificationDataDriverInterface;
 
+/**
+ * Binding abstractions to specific implementations.
+ * ./domain/_bootstrap.php must be called before making calls to
+ * any other domain functionality.
+ */
+
 Factory::register(
     NotificationInterface::class,
     fn (array $data) => new Notification($data)

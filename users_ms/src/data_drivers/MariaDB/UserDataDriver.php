@@ -14,6 +14,10 @@ class UserDataDriver implements UserDataDriverInterface
         DB::table('users')->insert($userData);
     }
 
+    /**
+     * Format the data in User class into db-friendly format,
+     * i.e. underscore, instead of cammelCase
+     */
     private function serialize(UserInterface $user): array
     {
         return [

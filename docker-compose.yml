@@ -46,6 +46,13 @@ services:
     depends_on:
       - mariadb
       - rabbitmq
+    stdin_open: true
+    tty: true
+    command: bash -c "composer install &&
+      (php -r \"file_exists('.env') || copy('.env.example', '.env');\") &&
+      php artisan key:generate --ansi -q &&
+      php artisan migrate --force &&
+      php artisan serve --host 0.0.0.0"
 
   notifications_ms:
     image: docker.io/bitnami/laravel:10
@@ -64,7 +71,13 @@ services:
       - './notifications_ms/src:/app'
     depends_on:
       - rabbitmq
-    command: php artisan queue:work
+    stdin_open: true
+    tty: true
+    command: bash -c "composer install &&
+      (php -r \"file_exists('.env') || copy('.env.example', '.env');\") &&
+      php artisan key:generate --force -q &&
+      php artisan migrate --force &&
+      php artisan queue:work"
 
 volumes:
   rabbitmq_data:
